@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, Message } from 'discord.js';
+import { Client, Events, GatewayIntentBits, Message, Collection } from 'discord.js';
 import OpenAI from 'openai';
 import type { ChatCompletion } from 'openai/resources/chat/completions.js';
 import { googleGeminiPro } from './jb_prompts';
@@ -70,7 +70,7 @@ const handleAIModelRequest = async (message: Message) => {
 };
 
 // Handle AI Chat Requests
-const handleAIChatRequest = async (message: Message) => {
+const handleAIChatRequest = async (message: Message, chatHistory: Collection<string, Message>) => {
   const userId = message.author.id;
   const now = Date.now();
 
@@ -88,17 +88,23 @@ const handleAIChatRequest = async (message: Message) => {
     return;
   }
 
+  // Prepare chat history
+  const formattedChatHistory = chatHistory.map(msg => ({
+    role: (msg.author.bot ? 'assistant' : 'user') as 'assistant' | 'user',
+    content: msg.content,
+  }));
+
   try {
     if ('sendTyping' in message.channel) {
       await message.channel.sendTyping();
     }
 
+    formattedChatHistory.push({ role: 'user', content: query });
+
     const completion = await openai.chat.completions.create({
       model: MODEL_ID,
-      messages: [
-        { role: 'user', content: query },
+      messages: formattedChatHistory
         //{ role: 'system', content: googleGeminiPro }
-      ],
     });
 
     const responseText = completion.choices[0]?.message?.content || 'No response from AI.';
@@ -136,7 +142,9 @@ client.on(Events.MessageCreate, async (message) => {
   if (message.content.startsWith(MODEL_PREFIX)) {
     await handleAIModelRequest(message);
   } else if (message.content.startsWith(BOT_PREFIX)) {
-    await handleAIChatRequest(message);
+    const chatHistory = await message.channel.messages.fetch({ limit: 50 });
+    console.log(chatHistory.map(m => `${m.author.tag}: ${m.content}`).join('\n'));
+    await handleAIChatRequest(message, chatHistory);
   } else {
     console.log(`${message.author.tag} said: ${message.content}`);
   }
