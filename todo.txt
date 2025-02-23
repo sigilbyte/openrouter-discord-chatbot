@@ -1,7 +1,0 @@
-
-Bot Actions:
-- take attached transcript
-- openrouter sdk (= openai sdk)
-	- sends completion request
-	- receive & post completion to chat
-	-

@@ -3,6 +3,8 @@ import OpenAI from 'openai';
 import type { ChatCompletion } from 'openai/resources/chat/completions.js';
 import { googleGeminiPro } from './jb_prompts';
 import fs from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 // Load valid models from file
 const loadValidModels = (): Set<string> => {
@@ -46,22 +48,55 @@ client.once(Events.ClientReady, () => {
   }
 });
 
+// Execute shell command as promise
+const execPromise = promisify(exec);
+
+// Handle Print Models Request
+const handlePrintModels = async (message: Message) => {
+  try {
+    const { stdout, stderr } = await execPromise('curl -s https://openrouter.ai/api/v1/models | jq \'.data[].id\'');
+    if (stderr) {
+      console.error('Error:', stderr);
+      await message.reply('Error fetching model list. Please try again later.');
+      return;
+    }
+    
+    const sortedModels = stdout.split('\n').sort().join('\n');
+    const chunks = splitMessage(sortedModels, 1900);
+    
+    for (const chunk of chunks) {
+      const wrappedChunk = 'Available models:\n```bash\n' + chunk + '```';
+      if ('send' in message.channel) {
+        await message.channel.send(wrappedChunk);
+      }
+    }
+  } catch (error) {
+    console.error('Error executing command:', error);
+    await message.reply('Error fetching model list. Please try again later.');
+  }
+};
+
 // Handle AI Model Change Requests
 const handleAIModelRequest = async (message: Message) => {
-  const modelId = message.content.slice(MODEL_PREFIX.length).trim();
+  const command = message.content.slice(MODEL_PREFIX.length).trim();
   
-  if (!modelId) {
+  if (command === 'print') {
+    await handlePrintModels(message);
+    return;
+  }
+  
+  if (!command) {
     await message.reply('Please provide a model ID after the `!ai-model` command.');
     return;
   }
 
-  if (!VALID_MODELS.has(modelId)) {
+  if (!VALID_MODELS.has(command)) {
     await message.reply('Invalid model ID. Please provide a valid model from the supported list.');
     return;
   }
 
   try {
-    MODEL_ID = modelId;
+    MODEL_ID = command;
     await message.reply(`AI model successfully changed to: ${MODEL_ID}`);
   } catch (error) {
     console.error('Model Change Error:', error);
@@ -129,11 +164,46 @@ const handleAIChatRequest = async (message: Message, chatHistory: Collection<str
 
 // Utility: Split Message into Chunks
 const splitMessage = (text: string, maxLength: number): string[] => {
-  const chunks: string[] = [];
-  for (let i = 0; i < text.length; i += maxLength) {
-    chunks.push(text.substring(i, i + maxLength));
+  if (text.length === 0) {
+    return ['No response from AI.'];
   }
-  return chunks.length ? chunks : ['No response from AI.'];
+
+  const lines = text.split('\n');
+  const chunks: string[] = [];
+  let currentChunk = '';
+
+  for (let line of lines) {
+    // Check whether adding this line would exceed the maximum length
+    if ((currentChunk + line).length + (currentChunk ? 1 : 0) <= maxLength) {
+      // Append line to the current chunk
+      currentChunk += (currentChunk ? '\n' : '') + line;
+    } else {
+      // If the line alone exceeds maxLength, we add it separately
+      if (line.length > maxLength) {
+        while (line.length > maxLength) {
+          chunks.push(line.substring(0, maxLength));
+          line = line.substring(maxLength);
+        }
+        if (line.length > 0) {
+          currentChunk = line;
+        }
+      } else {
+        // Flush current chunk and start a new one with the current line
+        if (currentChunk) {
+          chunks.push(currentChunk);
+          currentChunk = '';
+        }
+        currentChunk = line;
+      }
+    }
+  }
+
+  // Don't forget to add the last accumulated chunk
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+
+  return chunks;
 };
 
 // Event: Message Created
