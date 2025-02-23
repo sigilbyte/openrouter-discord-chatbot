@@ -4,7 +4,7 @@ import fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-const loadValidModels = (): Set<string> => {
+export const loadValidModels = (): Set<string> => {
   const content = fs.readFileSync('openrouter_ids.txt', 'utf-8');
   return new Set(
     content
@@ -93,7 +93,7 @@ const handleAIModelRequest = async (message: Message) => {
   }
 };
 
-const handleAIChatRequest = async (message: Message, chatHistory: Collection<string, Message>) => {
+export const handleAIChatRequest = async (message: Message, chatHistory: Collection<string, Message>) => {
   const userId = message.author.id;
   const now = Date.now();
   const lastMessageTime = userMessageTimestamps.get(userId) || 0;
@@ -147,7 +147,7 @@ const handleAIChatRequest = async (message: Message, chatHistory: Collection<str
   }
 };
 
-const splitMessage = (text: string, maxLength: number): string[] => {
+export const splitMessage = (text: string, maxLength: number): string[] => {
   if (text.length === 0) {
     return ['No response from AI.'];
   }
