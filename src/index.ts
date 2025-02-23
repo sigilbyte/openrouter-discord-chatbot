@@ -1,8 +1,26 @@
 import { Client, Events, GatewayIntentBits, Message } from 'discord.js';
 import OpenAI from 'openai';
 import type { ChatCompletion } from 'openai/resources/chat/completions.js';
+import { googleGeminiPro } from './jb_prompts';
+import fs from 'fs';
+
+// Load valid models from file
+const loadValidModels = (): Set<string> => {
+  const content = fs.readFileSync('openrouter_ids.txt', 'utf-8');
+  return new Set(
+    content
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .map(line => line.replace(/"/g, ''))
+  );
+};
+
+const VALID_MODELS: Set<string> = loadValidModels();
+let MODEL_ID: string = 'openai/gpt-4o';
 
 const BOT_PREFIX = '!ai';
+const MODEL_PREFIX = '!ai-model';
 const RATE_LIMIT_SECONDS = 5;
 const RATE_LIMIT_MESSAGE = "Please wait a few seconds before sending another request.";
 const userMessageTimestamps = new Map<string, number>();
@@ -27,6 +45,29 @@ client.once(Events.ClientReady, () => {
     client.user.setActivity('AI Chatbot');
   }
 });
+
+// Handle AI Model Change Requests
+const handleAIModelRequest = async (message: Message) => {
+  const modelId = message.content.slice(MODEL_PREFIX.length).trim();
+  
+  if (!modelId) {
+    await message.reply('Please provide a model ID after the `!ai-model` command.');
+    return;
+  }
+
+  if (!VALID_MODELS.has(modelId)) {
+    await message.reply('Invalid model ID. Please provide a valid model from the supported list.');
+    return;
+  }
+
+  try {
+    MODEL_ID = modelId;
+    await message.reply(`AI model successfully changed to: ${MODEL_ID}`);
+  } catch (error) {
+    console.error('Model Change Error:', error);
+    await message.reply('Failed to change the AI model. Please try again with a valid model ID.');
+  }
+};
 
 // Handle AI Chat Requests
 const handleAIChatRequest = async (message: Message) => {
@@ -53,8 +94,11 @@ const handleAIChatRequest = async (message: Message) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: 'openai/gpt-4o',
-      messages: [{ role: 'user', content: query }],
+      model: MODEL_ID,
+      messages: [
+        { role: 'user', content: query },
+        //{ role: 'system', content: googleGeminiPro }
+      ],
     });
 
     const responseText = completion.choices[0]?.message?.content || 'No response from AI.';
@@ -89,8 +133,9 @@ const splitMessage = (text: string, maxLength: number): string[] => {
 // Event: Message Created
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-
-  if (message.content.startsWith(BOT_PREFIX)) {
+  if (message.content.startsWith(MODEL_PREFIX)) {
+    await handleAIModelRequest(message);
+  } else if (message.content.startsWith(BOT_PREFIX)) {
     await handleAIChatRequest(message);
   } else {
     console.log(`${message.author.tag} said: ${message.content}`);
