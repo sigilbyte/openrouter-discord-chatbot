@@ -1,12 +1,9 @@
 import { Client, Events, GatewayIntentBits, Message, Collection } from 'discord.js';
 import OpenAI from 'openai';
-import type { ChatCompletion } from 'openai/resources/chat/completions.js';
-import { googleGeminiPro } from './jb_prompts';
 import fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-// Load valid models from file
 const loadValidModels = (): Set<string> => {
   const content = fs.readFileSync('openrouter_ids.txt', 'utf-8');
   return new Set(
@@ -40,7 +37,6 @@ const openai = new OpenAI({
   },
 });
 
-// Bot Ready
 client.once(Events.ClientReady, () => {
   if (client.user) {
     console.log(`Logged in as ${client.user.tag}`);
@@ -48,10 +44,8 @@ client.once(Events.ClientReady, () => {
   }
 });
 
-// Execute shell command as promise
 const execPromise = promisify(exec);
 
-// Handle Print Models Request
 const handlePrintModels = async (message: Message) => {
   try {
     const { stdout, stderr } = await execPromise('curl -s https://openrouter.ai/api/v1/models | jq \'.data[].id\'');
@@ -76,25 +70,20 @@ const handlePrintModels = async (message: Message) => {
   }
 };
 
-// Handle AI Model Change Requests
 const handleAIModelRequest = async (message: Message) => {
   const command = message.content.slice(MODEL_PREFIX.length).trim();
-  
   if (command === 'print') {
     await handlePrintModels(message);
     return;
   }
-  
   if (!command) {
     await message.reply('Please provide a model ID after the `!ai-model` command.');
     return;
   }
-
   if (!VALID_MODELS.has(command)) {
     await message.reply('Invalid model ID. Please provide a valid model from the supported list.');
     return;
   }
-
   try {
     MODEL_ID = command;
     await message.reply(`AI model successfully changed to: ${MODEL_ID}`);
@@ -104,12 +93,9 @@ const handleAIModelRequest = async (message: Message) => {
   }
 };
 
-// Handle AI Chat Requests
 const handleAIChatRequest = async (message: Message, chatHistory: Collection<string, Message>) => {
   const userId = message.author.id;
   const now = Date.now();
-
-  // Rate Limiting
   const lastMessageTime = userMessageTimestamps.get(userId) || 0;
   if (now - lastMessageTime < RATE_LIMIT_SECONDS * 1000) {
     await message.reply(RATE_LIMIT_MESSAGE);
@@ -123,7 +109,6 @@ const handleAIChatRequest = async (message: Message, chatHistory: Collection<str
     return;
   }
 
-  // Prepare chat history
   const formattedChatHistory = chatHistory.map(msg => ({
     role: (msg.author.bot ? 'assistant' : 'user') as 'assistant' | 'user',
     content: msg.content,
@@ -162,7 +147,6 @@ const handleAIChatRequest = async (message: Message, chatHistory: Collection<str
   }
 };
 
-// Utility: Split Message into Chunks
 const splitMessage = (text: string, maxLength: number): string[] => {
   if (text.length === 0) {
     return ['No response from AI.'];
@@ -173,12 +157,9 @@ const splitMessage = (text: string, maxLength: number): string[] => {
   let currentChunk = '';
 
   for (let line of lines) {
-    // Check whether adding this line would exceed the maximum length
     if ((currentChunk + line).length + (currentChunk ? 1 : 0) <= maxLength) {
-      // Append line to the current chunk
       currentChunk += (currentChunk ? '\n' : '') + line;
     } else {
-      // If the line alone exceeds maxLength, we add it separately
       if (line.length > maxLength) {
         while (line.length > maxLength) {
           chunks.push(line.substring(0, maxLength));
@@ -188,7 +169,6 @@ const splitMessage = (text: string, maxLength: number): string[] => {
           currentChunk = line;
         }
       } else {
-        // Flush current chunk and start a new one with the current line
         if (currentChunk) {
           chunks.push(currentChunk);
           currentChunk = '';
@@ -197,8 +177,6 @@ const splitMessage = (text: string, maxLength: number): string[] => {
       }
     }
   }
-
-  // Don't forget to add the last accumulated chunk
   if (currentChunk) {
     chunks.push(currentChunk);
   }
@@ -206,7 +184,6 @@ const splitMessage = (text: string, maxLength: number): string[] => {
   return chunks;
 };
 
-// Event: Message Created
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   if (message.content.startsWith(MODEL_PREFIX)) {
@@ -220,16 +197,13 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-// Handle Uncaught Errors
 const handleError = (error: Error) => {
   console.error('Unhandled Error:', error);
-  // Optionally notify a specific channel or admin
 };
 
 process.on('unhandledRejection', handleError);
 process.on('uncaughtException', handleError);
 
-// Log in to Discord
 const DISCORD_TOKEN = process.env.DISCORD_BOT_TOKEN;
 if (!DISCORD_TOKEN) {
   console.error('Discord bot token is missing. Please set DISCORD_BOT_TOKEN in your environment variables.');
