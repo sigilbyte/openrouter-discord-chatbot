@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Collection, Message } from 'discord.js';
 
-// Get the functions to test
+// Get the functions to test 
 import { splitMessage, loadValidModels, handleAIChatRequest } from './index';
 
 // Mock Discord.js objects
