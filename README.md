@@ -11,7 +11,7 @@ a *minimal*, *open source* Discord chat bot with chat context and seamless switc
 |----------------------|----------------------------------------------------|
 | `!ai <message>`      | Command to chat with the AI model                  |
 | `!ai-model <model-id>` | Command to switch between OpenRouter supported models |
-| `!ai-model print`    | Command to print available OpenRouter model-ids    |
+| `!ai-model list`    | Command to list available OpenRouter model-ids    |
 
 - uses chat history (last 50 messages in current channel by default) for context
 - automatic message chunking for long responses
@@ -89,19 +89,22 @@ inside the discord server where your bot has been added, use the following comma
 
 
 ## what is planned
-the plan is to integrate all **OpenRouter functionalities** in a user-friendly and seemless way.
+integration of all **OpenRouter functionalities** in a user-friendly way.
 - [ ] provider routing
 - [ ] structured outputs
 - [ ] message transforms
 - [ ] web search
 - [ ] function calling
+...
 
-additionally i plan to add improvements for user-friendliness and integration:
+additional improvements for user-friendliness and integration:
 - [ ] message streaming
 - [ ] processing of attachments
 - [ ] token count and price display
+- [ ] docker containerization
 
-🚨🚨 **note**: this is a wip and the code is not yet optimized for production use. feel free to contact me on [X/Twitter](https://x.com/sigilbyte) to discuss your ideas or contribute to the project. I want to build in public and meet motivated devs on the way to collaborate with.🚨🚨
+🚨🚨 **note**: this is a wip and the code is not yet optimized for production use. feel free to contact me on [X/Twitter](https://x.com/sigilbyte) to discuss ideas or contribute to the project. 
+I want to build in public on purpose to share my progress and meet motivated peers on the way to collaborate with.🚨🚨
 
 ## License
 
