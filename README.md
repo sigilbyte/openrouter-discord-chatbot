@@ -1,94 +1,105 @@
-# OpenRouter Discord Chatbot
+# 0.0.1 OpenRouter Discord chatbot 🤖 (WIP)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/sigilbyte/openrouter-discord-chatbot)
 
-A Discord bot in development phase that enables interaction with all OpenRouter supported AI models through the OpenRouter API. the bot allows users to chat with different AI models and switch between them seamlessly.
+a minimal open source discord chat bot for OpenRouter API supported models.
 
 ## features so far
 
-- chat with AI models using the `!ai` command
-- switch between different AI models using `!ai-model` command
-- view available models with `!ai-model print`
+- `!ai <message>` command to chat with AI model
+- `!ai-model <model-id>` command to  switch between OpenRouter supported models
+- `!ai-model print` command to print available OpenRouter model-ids
 - rate limiting protection to prevent spam
-- maintains chat history context for more coherent conversations
+- uses chat history (last 50 messages in current channel by default) for context
 - automatic message chunking for long responses
 
+**DEVELOPMENT PHASE** - feel free to create PRs and issues. I will be adding more features and fixing bugs.
 
 ## prerequisites
 
-- [Bun](https://bun.sh) runtime
-- Discord Bot Token
+- [bun](https://bun.sh) runtime
+- Discord bot token
 - OpenRouter API Key
-- OpenRouter HTTP Referer URL
 
-## Installation
+## installation
 
-1. Clone the repository:
+1. clone the repository:
 ```bash
-git clone https://github.com/yourusername/openrouter-discord-chatbot.git
+git clone https://github.com/sigilbyte/openrouter-discord-chatbot.git
 cd openrouter-discord-chatbot
 ```
 
-2. Install dependencies using Bun:
+2. install dependencies using bun:
 ```bash
 bun install
 ```
 
-3. Create a `.env` file in the root directory with the following variables:
+3. create a `.env` file in the root directory with the following variables:
 ```env
 DISCORD_BOT_TOKEN=your_discord_bot_token
 OPENROUTER_API_KEY=your_openrouter_api_key
 ```
 
-4. Create an `openrouter_ids.txt` file containing the list of allowed model IDs (one per line). Example:
-```
-"openai/o3-mini"
-"anthropic/claude-3.5-sonnet"
-"google/gemini-2.0-pro-exp-02-05:free"
-```
 
-## Discord Bot Setup
+## Discord bot setup
 
-[Your Discord bot setup instructions will go here]
+1. create an application on the [Discord Developer Portal](https://discord.com/developers/applications):
+![create app](image.png)
+2. configure bot installation in installation tab:
+![bot installation](image-1.png)
+Copy the Install link for later.
+3. configure bot settings & create your bot token:
+    - Enable MESSAGE CONTENT INTENT    
+![bot settings](image-2.png)
+    - Click 'Reset Token' to generate your `DISCORD_BOT_TOKEN`:
+    ![bot token](image-3.png)
 
-## Configuration
-
-### Environment Variables
-
-- `DISCORD_BOT_TOKEN`: Your Discord bot's token
+## configuration
+in your dotenv file, you will need to set the following variables:
+- `DISCORD_BOT_TOKEN`: the bot token you have created in the Discord Developer Portal
 - `OPENROUTER_API_KEY`: Your OpenRouter API key
 
+the app includes basic rate limiting to prevent spam:
+- default cooldown: 5 seconds between requests
+- configurable in `src/index.ts` by modifying `RATE_LIMIT_SECONDS`
 
-### Rate Limiting
+## how to use 
+after setting everything up in the discord developer portal, open the Install link you copied earlier to add the bot to your server.
+#### run bot script:
+open your terminal and run:
+```bash
+cd openrouter-discord-bot
+bun run src/index.ts
+```
 
-The bot includes rate limiting to prevent spam:
-- Default cooldown: 5 seconds between requests
-- Configurable in `src/index.ts` by modifying `RATE_LIMIT_SECONDS`
-
-## Usage
-
-### Available Commands
-
-1. chat with bot:
+inside the discord server where your bot is active, you can now use the following commands:
+#### chat with bot:
 ```
 !ai <your message>
 ```
-
-2. switch model:
+#### switch model:
 ```
 !ai-model <model_id>
 ```
-
-3. print available model ids:
+#### print available model ids:
 ```
 !ai-model print
 ```
 
 
-## Development
+## development plans
+the plan is to integrate all **OpenRouter functionalities** in a user-friendly and seemless way.
+- [ ] provider routing
+- [ ] structured outputs
+- [ ] message transforms
+- [ ] web search
+- [ ] function calling
 
-To run the bot in development mode:
-```bash
-bun run src/index.ts
-```
+additionally i plan to add improvements for user-friendliness and integration:
+- [ ] message streaming
+- [ ] processing of attachments
+- [ ] token count and price display
+
+🚨🚨 **note**: this is a work in progress and the code is not yet optimized for production use. feel free to contact me on [X/Twitter](https://x.com/sigilbyte) to discuss your ideas or contribute to the project. I want to build in public and meet motivated devs to collaborate with.🚨🚨
 
 ## License
 
