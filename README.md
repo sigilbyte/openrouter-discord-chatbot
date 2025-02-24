@@ -3,7 +3,7 @@
 ![Status](https://img.shields.io/badge/status-prerelease-yellow)
 
 
-a *minimal*, *open source* Discord chat bot with chat context and seamless switching of models enabled by the OpenRouter API. written in typescript, using the bun runtime and bun tests. 
+a *minimal*, *open source* Discord chat bot with chat context and seamless switching of models enabled by the [OpenRouter API](https://openrouter.ai/). written in typescript, using bun runtime and bun tests. 
 
 ## features so far
 
@@ -17,7 +17,7 @@ a *minimal*, *open source* Discord chat bot with chat context and seamless switc
 - automatic message chunking for long responses
 - rate limiting protection to prevent spam
 
-**WORK IN PROGRESS PHASE** - this is a very early version, feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this is getting more traction, I surely welcome every support 🤗
+**WORK IN PROGRESS PHASE** - this is a very early version, feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this is getting more traction, I surely welcome support 🤗
 
 ## what you need
 
@@ -83,7 +83,9 @@ inside the discord server where your bot has been added, use the following comma
 
 
 ## what is planned
-integration of all **OpenRouter functionalities** in a user-friendly way.
+integration of all **OpenRouter features**:
+- [x] model routing
+- [x] chat completion
 - [ ] provider routing
 - [ ] structured outputs
 - [ ] message transforms
@@ -97,8 +99,8 @@ additional improvements for user-friendliness and integration:
 - [ ] token count and price display
 - [ ] docker containerization
 
-🚨🚨 **note**: this is a wip and the code is not yet optimized for production use. feel free to contact me on [X/Twitter](https://x.com/sigilbyte) to discuss ideas or contribute to the project. 
-I want to build in public on purpose to share my progress and meet motivated peers on the way to collaborate with.🚨🚨
+🚨🚨 **note**: this is a WIP and the code is not yet optimized for production use. feel free to contact me on [X/Twitter](https://x.com/sigilbyte) to discuss ideas or contribute to the project. 
+I want to build in public on purpose to share my progress and meet peers on the way.🚨🚨
 
 ## License
 
