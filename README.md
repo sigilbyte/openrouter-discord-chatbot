@@ -1,4 +1,4 @@
-# v0.0.1-alpha OpenRouter Discord chatbot 🤖
+# OpenRouter Discord chatbot 🤖
 ![Version](https://img.shields.io/badge/version-v0.0.1--alpha-blue)
 ![Status](https://img.shields.io/badge/status-prerelease-yellow)
 
