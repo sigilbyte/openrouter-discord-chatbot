@@ -17,7 +17,7 @@ a *minimal*, *open source* Discord chat bot with chat context and seamless switc
 - automatic message chunking for long responses
 - rate limiting protection to prevent spam
 
-**WORK IN PROGRESS PHASE** - this is a very early version, feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this is getting more traction, I surely need support 🤗
+**WORK IN PROGRESS PHASE** - this is a very early version, feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this is getting more traction, I surely welcome every support 🤗
 
 ## what you need
 
@@ -38,7 +38,7 @@ cd openrouter-discord-chatbot
 bun install
 ```
 
-3. create a `.env` file in the root directory with the following variables:
+3. rename the `.envexample` file to `.env` and fill in your API keys:
 ```env
 OPENROUTER_API_KEY=your_openrouter_api_key
 DISCORD_BOT_TOKEN=your_discord_bot_token
@@ -46,9 +46,8 @@ DISCORD_BOT_TOKEN=your_discord_bot_token
 to get your OpenRouter API Key, sign up on [OpenRouter](https://openrouter.ai).
 to get your Discord bot token, follow the instructions below.
 
-## setup your discord bot
-
-1. create an application on the [Discord Developer Portal](https://discord.com/developers/applications):
+## get Discord bot token
+1. create an application in your [Discord Developer Portal](https://discord.com/developers/applications):
 ![create app](assets/images/image.png)
 2. configure bot installation in installation tab:
 ![bot installation](assets/images/image-1.png)
@@ -58,11 +57,6 @@ Copy the **Install link** for later.
 ![bot settings](assets/images/image-2.png)
     - Click 'Reset Token' to generate your `DISCORD_BOT_TOKEN`:
     ![bot token](assets/images/image-3.png)
-
-## configure the .env
-in your dotenv file, you will need to set the following variables:
-- `OPENROUTER_API_KEY`: Your OpenRouter API key
-- `DISCORD_BOT_TOKEN`: the bot token you have created in the Discord Developer Portal
 
 ## how to use the bot
 after setting up your bot in the discord developer portal, open the **Install link** you copied earlier to add the bot to your server.
