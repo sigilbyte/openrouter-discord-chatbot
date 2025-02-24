@@ -12,15 +12,15 @@ a minimal open source discord chat bot for OpenRouter API supported models.
 - uses chat history (last 50 messages in current channel by default) for context
 - automatic message chunking for long responses
 
-**DEVELOPMENT PHASE** - feel free to create PRs and issues. I will be adding more features and fixing bugs.
+**WORK IN PROGRESS PHASE** - feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this getting more traction, support would be highly appreciated 🤗
 
-## prerequisites
+## what you need
 
 - [bun](https://bun.sh) runtime
 - Discord bot token
 - OpenRouter API Key
 
-## installation
+## how to install
 
 1. clone the repository:
 ```bash
@@ -40,7 +40,7 @@ OPENROUTER_API_KEY=your_openrouter_api_key
 ```
 
 
-## Discord bot setup
+## setup your discord bot
 
 1. create an application on the [Discord Developer Portal](https://discord.com/developers/applications):
 ![create app](assets/images/image.png)
@@ -53,12 +53,12 @@ Copy the Install link for later.
     - Click 'Reset Token' to generate your `DISCORD_BOT_TOKEN`:
     ![bot token](assets/images/image-3.png)
 
-## configuration
+## configure the .env
 in your dotenv file, you will need to set the following variables:
 - `DISCORD_BOT_TOKEN`: the bot token you have created in the Discord Developer Portal
 - `OPENROUTER_API_KEY`: Your OpenRouter API key
 
-## how to use 
+## how to use the bot
 after setting everything up in the discord developer portal, open the Install link you copied earlier to add the bot to your server.
 #### run bot script:
 open your terminal and run:
@@ -82,7 +82,7 @@ inside the discord server where your bot is active, you can now use the followin
 ```
 
 
-## development plans
+## what is planned
 the plan is to integrate all **OpenRouter functionalities** in a user-friendly and seemless way.
 - [ ] provider routing
 - [ ] structured outputs
