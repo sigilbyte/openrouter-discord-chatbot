@@ -43,15 +43,15 @@ OPENROUTER_API_KEY=your_openrouter_api_key
 ## Discord bot setup
 
 1. create an application on the [Discord Developer Portal](https://discord.com/developers/applications):
-![create app](image.png)
+![create app](assets/images/image.png)
 2. configure bot installation in installation tab:
-![bot installation](image-1.png)
+![bot installation](assets/images/image-1.png)
 Copy the Install link for later.
 3. configure bot settings & create your bot token:
     - Enable MESSAGE CONTENT INTENT    
-![bot settings](image-2.png)
+![bot settings](assets/images/image-2.png)
     - Click 'Reset Token' to generate your `DISCORD_BOT_TOKEN`:
-    ![bot token](image-3.png)
+    ![bot token](assets/images/image-3.png)
 
 ## configuration
 in your dotenv file, you will need to set the following variables:
@@ -99,13 +99,13 @@ additionally i plan to add improvements for user-friendliness and integration:
 - [ ] processing of attachments
 - [ ] token count and price display
 
-🚨🚨 **note**: this is a work in progress and the code is not yet optimized for production use. feel free to contact me on [X/Twitter](https://x.com/sigilbyte) to discuss your ideas or contribute to the project. I want to build in public and meet motivated devs to collaborate with.🚨🚨
+🚨🚨 **note**: this is a wip and the code is not yet optimized for production use. feel free to contact me on [X/Twitter](https://x.com/sigilbyte) to discuss your ideas or contribute to the project. I want to build in public and meet motivated devs on the way to collaborate with.🚨🚨
 
 ## License
 
 MIT License
 
-Copyright (c) 2024
+Copyright (c) 2025
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
