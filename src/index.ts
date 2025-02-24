@@ -20,9 +20,11 @@ let MODEL_ID: string = 'openai/gpt-4o';
 
 const BOT_PREFIX = '!ai';
 const MODEL_PREFIX = '!ai-model';
+const PROMPT_PREFIX = '!ai-prompt';
 const RATE_LIMIT_SECONDS = 5;
 const RATE_LIMIT_MESSAGE = "Please wait a few seconds before sending another request.";
 const userMessageTimestamps = new Map<string, number>();
+let systemPrompt: string = '';
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
@@ -67,6 +69,22 @@ const handlePrintModels = async (message: Message) => {
   } catch (error) {
     console.error('Error executing command:', error);
     await message.reply('Error fetching model list. Please try again later.');
+  }
+};
+
+const handlePromptRequest = async (message: Message) => {
+  const newPrompt = message.content.slice(PROMPT_PREFIX.length).trim();
+  if (!newPrompt) {
+    await message.reply('Please provide a system prompt after the `!ai-prompt` command.');
+    return;
+  }
+  
+  try {
+    systemPrompt = newPrompt;
+    await message.reply(`System prompt successfully updated to: "${systemPrompt}"`);
+  } catch (error) {
+    console.error('Prompt Update Error:', error);
+    await message.reply('Failed to update the system prompt. Please try again.');
   }
 };
 
@@ -121,10 +139,13 @@ export const handleAIChatRequest = async (message: Message, chatHistory: Collect
 
     formattedChatHistory.push({ role: 'user', content: query });
 
+    const messages = systemPrompt
+      ? [{ role: 'system' as const, content: systemPrompt }, ...formattedChatHistory]
+      : formattedChatHistory;
+
     const completion = await openai.chat.completions.create({
       model: MODEL_ID,
-      messages: formattedChatHistory
-        //{ role: 'system', content: googleGeminiPro }
+      messages
     });
 
     const responseText = completion.choices[0]?.message?.content || 'No response from AI.';
@@ -186,7 +207,9 @@ export const splitMessage = (text: string, maxLength: number): string[] => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
-  if (message.content.startsWith(MODEL_PREFIX)) {
+  if (message.content.startsWith(PROMPT_PREFIX)) {
+    await handlePromptRequest(message);
+  } else if (message.content.startsWith(MODEL_PREFIX)) {
     await handleAIModelRequest(message);
   } else if (message.content.startsWith(BOT_PREFIX)) {
     const chatHistory = await message.channel.messages.fetch({ limit: 50 });
