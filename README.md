@@ -1,9 +1,9 @@
-# OpenRouter Discord chatbot 🤖
+# OpenRouter Discord chatbot | Integrate OpenRouter API with Discord chats seamlessly 🤖
 ![Version](https://img.shields.io/badge/version-v0.0.1--alpha-blue)
 ![Status](https://img.shields.io/badge/status-prerelease-yellow)
 
 
-a minimal open source discord chat bot with chat context and seamless switching of models enabled by the OpenRouter API.
+a *minimal*, *open source* Discord chat bot with chat context and seamless switching of models enabled by the OpenRouter API. written in typescript, using the bun runtime and bun tests. 
 
 ## features so far
 
