@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 
 export const loadValidModels = (): Set<string> => {
-  const content = fs.readFileSync('openrouter_ids.txt', 'utf-8');
+  const content = fs.readFileSync('assets/docs/openrouter_ids.txt', 'utf-8');
   return new Set(
     content
       .split('\n')
