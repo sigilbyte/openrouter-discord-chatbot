@@ -52,7 +52,7 @@ to get your Discord bot token, follow the instructions below.
 ![create app](assets/images/image.png)
 2. configure bot installation in installation tab:
 ![bot installation](assets/images/image-1.png)
-Copy the Install link for later.
+Copy the **Install link** for later.
 3. configure bot settings & create your bot token:
     - Enable MESSAGE CONTENT INTENT    
 ![bot settings](assets/images/image-2.png)
@@ -65,26 +65,26 @@ in your dotenv file, you will need to set the following variables:
 - `DISCORD_BOT_TOKEN`: the bot token you have created in the Discord Developer Portal
 
 ## how to use the bot
-after setting everything up in the discord developer portal, open the Install link you copied earlier to add the bot to your server.
-#### run bot script:
+after setting up your bot in the discord developer portal, open the **Install link** you copied earlier to add the bot to your server.
+### run bot script:
 open your terminal and run:
 ```bash
 cd openrouter-discord-bot
 bun run src/index.ts
 ```
 
-inside the discord server where your bot is active, you can now use the following commands:
-#### chat with bot:
+inside the discord server where your bot has been added, use the following commands:
+### chat with bot:
 ```
 !ai <your message>
 ```
-#### switch model:
+### switch model:
 ```
 !ai-model <model_id>
 ```
-#### print available model ids:
+### list available model ids:
 ```
-!ai-model print
+!ai-model list
 ```
 
 

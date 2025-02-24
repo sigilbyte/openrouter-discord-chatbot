@@ -72,7 +72,7 @@ const handlePrintModels = async (message: Message) => {
 
 const handleAIModelRequest = async (message: Message) => {
   const command = message.content.slice(MODEL_PREFIX.length).trim();
-  if (command === 'print') {
+  if (command === 'list') {
     await handlePrintModels(message);
     return;
   }
