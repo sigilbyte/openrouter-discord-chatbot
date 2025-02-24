@@ -1,4 +1,4 @@
-# 0.0.1 OpenRouter Discord chatbot 🤖
+# v0.0.1-alpha OpenRouter Discord chatbot 🤖
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/sigilbyte/openrouter-discord-chatbot)
 
 a minimal open source discord chat bot with chat context and seamless switching of models enabled by the OpenRouter API.
@@ -15,7 +15,7 @@ a minimal open source discord chat bot with chat context and seamless switching 
 - automatic message chunking for long responses
 - rate limiting protection to prevent spam
 
-**WORK IN PROGRESS PHASE** - feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this getting more traction, support would be highly appreciated 🤗
+**WORK IN PROGRESS PHASE** - this is a very early version, feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this is getting more traction, I surely need support 🤗
 
 ## what you need
 
