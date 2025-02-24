@@ -58,10 +58,6 @@ in your dotenv file, you will need to set the following variables:
 - `DISCORD_BOT_TOKEN`: the bot token you have created in the Discord Developer Portal
 - `OPENROUTER_API_KEY`: Your OpenRouter API key
 
-the app includes basic rate limiting to prevent spam:
-- default cooldown: 5 seconds between requests
-- configurable in `src/index.ts` by modifying `RATE_LIMIT_SECONDS`
-
 ## how to use 
 after setting everything up in the discord developer portal, open the Install link you copied earlier to add the bot to your server.
 #### run bot script:
