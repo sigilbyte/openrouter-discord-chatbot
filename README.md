@@ -1,16 +1,19 @@
 # 0.0.1 OpenRouter Discord chatbot 🤖
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/sigilbyte/openrouter-discord-chatbot)
 
-a minimal open source discord chat bot for OpenRouter API supported models.
+a minimal open source discord chat bot with chat context and seamless switching of models enabled by the OpenRouter API.
 
 ## features so far
 
-- `!ai <message>` command to chat with AI model
-- `!ai-model <model-id>` command to  switch between OpenRouter supported models
-- `!ai-model print` command to print available OpenRouter model-ids
-- rate limiting protection to prevent spam
+| command              | description                                        |
+|----------------------|----------------------------------------------------|
+| `!ai <message>`      | Command to chat with the AI model                  |
+| `!ai-model <model-id>` | Command to switch between OpenRouter supported models |
+| `!ai-model print`    | Command to print available OpenRouter model-ids    |
+
 - uses chat history (last 50 messages in current channel by default) for context
 - automatic message chunking for long responses
+- rate limiting protection to prevent spam
 
 **WORK IN PROGRESS PHASE** - feel free to create PRs and issues. I will be adding more features and fixing bugs myself. in case this getting more traction, support would be highly appreciated 🤗
 
