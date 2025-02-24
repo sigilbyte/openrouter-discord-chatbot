@@ -1,4 +1,4 @@
-# 0.0.1 OpenRouter Discord chatbot 🤖 (WIP)
+# 0.0.1 OpenRouter Discord chatbot 🤖
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/sigilbyte/openrouter-discord-chatbot)
 
 a minimal open source discord chat bot for OpenRouter API supported models.
@@ -35,10 +35,11 @@ bun install
 
 3. create a `.env` file in the root directory with the following variables:
 ```env
-DISCORD_BOT_TOKEN=your_discord_bot_token
 OPENROUTER_API_KEY=your_openrouter_api_key
+DISCORD_BOT_TOKEN=your_discord_bot_token
 ```
-
+to get your OpenRouter API Key, sign up on [OpenRouter](https://openrouter.ai).
+to get your Discord bot token, follow the instructions below.
 
 ## setup your discord bot
 
@@ -55,8 +56,8 @@ Copy the Install link for later.
 
 ## configure the .env
 in your dotenv file, you will need to set the following variables:
-- `DISCORD_BOT_TOKEN`: the bot token you have created in the Discord Developer Portal
 - `OPENROUTER_API_KEY`: Your OpenRouter API key
+- `DISCORD_BOT_TOKEN`: the bot token you have created in the Discord Developer Portal
 
 ## how to use the bot
 after setting everything up in the discord developer portal, open the Install link you copied earlier to add the bot to your server.
