@@ -86,6 +86,7 @@ inside the discord server where your bot has been added, use the following comma
 integration of all **OpenRouter features**:
 - [x] model routing
 - [x] chat completion
+- [x] Cost and token display
 - [ ] provider routing
 - [ ] structured outputs
 - [ ] message transforms
@@ -94,7 +95,6 @@ integration of all **OpenRouter features**:
 ...
 
 additional improvements for user-friendliness and integration:
-- [ ] message streaming
 - [ ] processing of attachments
 - [ ] token count and price display
 - [ ] docker containerization
