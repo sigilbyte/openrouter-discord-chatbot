@@ -214,7 +214,7 @@ export const handleAIChatRequest = async (message: Message, chatHistory: Collect
         }
 
         if (responseMetadata) {
-          const formattedMetadata = codeBlock('elm',`Cost: ${responseMetadata.total_cost}\ntokens: ${responseMetadata.tokens_completion}`);
+          const formattedMetadata = codeBlock('elm',`Cost: ${responseMetadata.total_cost}$\ntokens: ${responseMetadata.tokens_completion}`);
           if ('send' in message.channel && typeof message.channel.send === 'function') {
               await message.channel.send(formattedMetadata);
           }
