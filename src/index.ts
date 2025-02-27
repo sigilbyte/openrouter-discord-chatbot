@@ -1,247 +1,331 @@
-import { Client, Events, GatewayIntentBits, Message, Collection, inlineCode, codeBlock } from 'discord.js';
-import OpenAI from 'openai';
-import fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { splitMessage, loadValidModels } from './utils';
+/**
+ * Discord bot main entry point
+ */
 
+import { Client, Events, Collection, REST, Routes, TextChannel, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import type { ChatInputCommandInteraction, Interaction, Message } from 'discord.js';
+import { DiscordService } from './services/discord.service';
+import { ComponentManager } from './components';
+import { validateEnvironment, DISCORD_BOT_TOKEN, DISCORD_CLIENT_ID, OPENROUTER_API_KEY } from './config/environment';
+import { DEFAULT_WELCOME_MESSAGE, BOT_PREFIX, MODEL_PREFIX, PROMPT_PREFIX, RATE_LIMIT_SECONDS, RATE_LIMIT_MESSAGE } from './config/constants';
+import type { SlashCommand } from './types/command.types';
+import { OpenRouterService } from './services/openrouter.service';
+import { RateLimiter } from './utils/rate-limiter.utils';
+import { splitMessage } from './utils/message.utils';
+import { loadValidModels } from './utils/model.utils';
 
-const VALID_MODELS: Set<string> = loadValidModels();
-let MODEL_ID: string = 'openai/gpt-4o';
+// Import slash commands
+import { aiSlashCommand, modelSlashCommand, promptSlashCommand } from './commands';
 
-const BOT_PREFIX = '!ai';
-const MODEL_PREFIX = '!ai-model';
-const PROMPT_PREFIX = '!ai-prompt';
-const RATE_LIMIT_SECONDS = 5;
-const RATE_LIMIT_MESSAGE = "Please wait a few seconds before sending another request.";
-const userMessageTimestamps = new Map<string, number>();
-let systemPrompt: string = '';
+// Create a rate limiter for AI commands
+const rateLimiter = new RateLimiter(RATE_LIMIT_SECONDS);
 
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
-});
-
-const openai = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY || '',
-  defaultHeaders: {
-    'HTTP-Referer': process.env.OPENROUTER_REFERER || '',
-    'X-Title': process.env.OPENROUTER_TITLE || 'Discord AI Bot',
-  },
-});
-
-client.once(Events.ClientReady, () => {
-  if (client.user) {
-    console.log(`Logged in as ${client.user.tag}`);
-    client.user.setActivity('AI Chatbot');
-  }
-});
-
-const execPromise = promisify(exec);
-
-const handlePrintModels = async (message: Message) => {
+async function main() {
   try {
-    const { stdout, stderr } = await execPromise('curl -s https://openrouter.ai/api/v1/models | jq \'.data[].id\'');
-    if (stderr) {
-      console.error('Error:', stderr);
-      await message.reply('Error fetching model list. Please try again later.');
-      return;
+    // Validate environment variables
+    if (!validateEnvironment()) {
+      process.exit(1);
     }
     
-    const sortedModels = stdout.split('\n').sort().join('\n');
-    const chunks = splitMessage(sortedModels, 1900);
+    console.log('Starting Discord bot...');
     
-    for (const chunk of chunks) {
-      const wrappedChunk = 'Available models:\n```bash\n' + chunk + '```';
-      if ('send' in message.channel) {
-        await message.channel.send(wrappedChunk);
-      }
+    // Get Discord service
+    const discordService = DiscordService.getInstance();
+    const client = discordService.getClient();
+    
+    // Get OpenRouter service
+    const openRouterService = OpenRouterService.getInstance();
+    
+    // Create a collection for slash commands
+    const commands = new Collection<string, SlashCommand>();
+    
+    // Register slash commands directly
+    [aiSlashCommand, modelSlashCommand, promptSlashCommand].forEach(cmd => 
+      commands.set(cmd.data.name, cmd)
+    );
+    
+    // Register slash commands with Discord API
+    const rest = new REST({ version: '10' }).setToken(DISCORD_BOT_TOKEN || '');
+    
+    try {
+      console.log('Started refreshing application (/) commands.');
+      
+      await rest.put(
+        Routes.applicationCommands(DISCORD_CLIENT_ID || ''),
+        { body: commands.map(command => command.data.toJSON()) }
+      );
+      
+      console.log('Successfully reloaded application (/) commands.');
+    } catch (error) {
+      console.error('Error registering slash commands:', error);
     }
-  } catch (error) {
-    console.error('Error executing command:', error);
-    await message.reply('Error fetching model list. Please try again later.');
-  }
-};
-
-const handleMetadataRequest = async (responseId: string, token: string) => {
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const response = await fetch(`https://openrouter.ai/api/v1/generation?id=${responseId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
+    
+    // Get component manager for buttons and select menus
+    const componentManager = ComponentManager.getInstance();
+    
+    // Set up interaction handler for slash commands and components
+    client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+      try {
+        // Handle slash commands
+        if (interaction.isChatInputCommand()) {
+          const command = commands.get(interaction.commandName);
+          
+          if (!command) {
+            console.error(`No command matching ${interaction.commandName} was found.`);
+            return;
+          }
+          
+          await command.execute(interaction);
+        }
+        // Handle component interactions
+        else if (interaction.isButton() || interaction.isStringSelectMenu()) {
+          await componentManager.handleInteraction(client, interaction);
+        }
+      } catch (error) {
+        console.error('Interaction Error:', error);
+        
+        if (interaction.isChatInputCommand() && interaction.replied) {
+          await interaction.followUp({ 
+            content: 'There was an error executing this command!', 
+            ephemeral: true 
+          });
+        } else if (interaction.isChatInputCommand()) {
+          await interaction.reply({ 
+            content: 'There was an error executing this command!', 
+            ephemeral: true 
+          });
+        }
       }
     });
-
-    if (!response.ok) {
-      console.error(`Metadata request failed with status: ${response.status}`);
-      return null;
+    
+    // Set up message handler for prefix commands
+    client.on(Events.MessageCreate, async (message: Message) => {
+      if (message.author.bot) return;
+      
+      try {
+        // Handle prompt command
+        if (message.content.startsWith(PROMPT_PREFIX)) {
+          await handlePromptCommand(message, openRouterService);
+        } 
+        // Handle model command
+        else if (message.content.startsWith(MODEL_PREFIX)) {
+          await handleModelCommand(message, openRouterService);
+        } 
+        // Handle AI chat command
+        else if (message.content.startsWith(BOT_PREFIX)) {
+          await handleAIChatCommand(message, openRouterService, rateLimiter);
+        } 
+        // Log other messages
+        else {
+          console.log(`${message.author.tag} said: ${message.content}`);
+        }
+      } catch (error) {
+        console.error('Message Command Error:', error);
+      }
+    });
+    
+    // Initialize Discord client
+    await discordService.initialize();
+    
+    console.log('Discord bot is ready!');
+    
+    // Send welcome message to all guilds
+    if (client.guilds.cache.size > 0) {
+      console.log(`Sending startup welcome messages to ${client.guilds.cache.size} guilds...`);
+    } else {
+      console.log('No guilds found. The bot is not in any servers yet.');
     }
-
-    const data = await response.json();
-    // validate the response structure
-    if (!data || typeof data !== 'object' || !data.data) {
-      console.error('Invalid metadata response structure:', data);
-      return null;
-    }
-
-    if (typeof data.data.total_cost === 'undefined' || typeof data.data.tokens_completion === 'undefined') {
-      console.error('Missing required metadata fields:', data.data);
-      return null;
-    }
-
-    return {
-      total_cost: data.data.total_cost,
-      tokens_completion: data.data.tokens_completion
-    };
+    
+    client.guilds.cache.forEach(async (guild) => {
+      try {
+        // Find a suitable channel
+        const welcomeChannel = guild.systemChannel || 
+          guild.channels.cache.find(
+            channel => channel.type === 0 && (channel as TextChannel).permissionsFor(client.user!)?.has('SendMessages')
+          ) as TextChannel | null;
+        
+        if (welcomeChannel) {
+          // Create welcome buttons
+          const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              new ButtonBuilder()
+                .setCustomId('welcome_button')
+                .setLabel('Get Started')
+                .setStyle(ButtonStyle.Primary),
+              new ButtonBuilder()
+                .setCustomId('role_button')
+                .setLabel('Select Roles')
+                .setStyle(ButtonStyle.Secondary)
+            );
+          
+          // Send welcome message
+          await welcomeChannel.send({
+            content: `**Bot Restarted!**\n\n${DEFAULT_WELCOME_MESSAGE}`,
+            components: [row],
+          });
+          
+          console.log(`Sent startup welcome message to ${guild.name}`);
+        }
+      } catch (error) {
+        console.error(`Error sending welcome message to ${guild.name}:`, error);
+      }
+    });
   } catch (error) {
-    console.error('Error retrieving generation metadata:', error);
-    return null;
+    console.error('Startup Error:', error);
+    process.exit(1);
   }
-};
+}
 
-const handlePromptRequest = async (message: Message) => {
+// Handle prompt command
+async function handlePromptCommand(message: Message, openRouterService: OpenRouterService): Promise<void> {
   const newPrompt = message.content.slice(PROMPT_PREFIX.length).trim();
+  
   if (!newPrompt) {
     await message.reply('Please provide a system prompt after the `!ai-prompt` command.');
     return;
   }
   
   try {
-    systemPrompt = newPrompt;
-    await message.reply(`System prompt successfully updated to: "${systemPrompt}"`);
+    openRouterService.setSystemPrompt(newPrompt);
+    await message.reply(`System prompt successfully updated to: "${newPrompt}"`);
   } catch (error) {
     console.error('Prompt Update Error:', error);
     await message.reply('Failed to update the system prompt. Please try again.');
   }
-};
+}
 
-const handleAIModelRequest = async (message: Message) => {
+// Handle model command
+async function handleModelCommand(message: Message, openRouterService: OpenRouterService): Promise<void> {
   const command = message.content.slice(MODEL_PREFIX.length).trim();
+  
   if (command === 'list') {
-    await handlePrintModels(message);
+    await message.reply('Fetching available models...');
+    
+    try {
+      const validModels = await loadValidModels();
+      const modelList = Array.from(validModels).sort().join('\n');
+      
+      if (modelList.length === 0) {
+        await message.reply('No models available.');
+        return;
+      }
+      
+      // Split into chunks if needed
+      const chunks = splitMessage(modelList, 1900);
+      
+      // Send each chunk
+      for (const chunk of chunks) {
+        if ('send' in message.channel && typeof message.channel.send === 'function') {
+          await message.channel.send(`\`\`\`\n${chunk}\n\`\`\``);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching model list:', error);
+      await message.reply('Error fetching model list. Please try again later.');
+    }
+    
     return;
   }
+  
   if (!command) {
     await message.reply('Please provide a model ID after the `!ai-model` command.');
     return;
   }
-  if (!VALID_MODELS.has(command)) {
+  
+  const validModels = await loadValidModels();
+  
+  if (!validModels.has(command)) {
     await message.reply('Invalid model ID. Please provide a valid model from the supported list.');
     return;
   }
+  
   try {
-    MODEL_ID = command;
-    await message.reply(`AI model successfully changed to: ${MODEL_ID}`);
+    openRouterService.setModelId(command);
+    await message.reply(`AI model successfully changed to: ${command}`);
   } catch (error) {
     console.error('Model Change Error:', error);
     await message.reply('Failed to change the AI model. Please try again with a valid model ID.');
   }
-};
-
-
-client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot) return;
-  if (message.content.startsWith(PROMPT_PREFIX)) {
-    await handlePromptRequest(message);
-  } else if (message.content.startsWith(MODEL_PREFIX)) {
-    await handleAIModelRequest(message);
-  } else if (message.content.startsWith(BOT_PREFIX)) {
-    const chatHistory = await message.channel.messages.fetch({ limit: 50 });
-    console.log(chatHistory.map(m => `${m.author.tag}: ${m.content}`).join('\n'));
-    await handleAIChatRequest(message, chatHistory);
-  } else {
-    console.log(`${message.author.tag} said: ${message.content}`);
-  }
-});
-
-const handleError = (error: Error) => {
-  console.error('Unhandled Error:', error);
-};
-
-
-export const handleAIChatRequest = async (message: Message, chatHistory: Collection<string, Message>) => {
-    const userId = message.author.id;
-    const now = Date.now();
-    const lastMessageTime = userMessageTimestamps.get(userId) || 0;
-
-    if (now - lastMessageTime < RATE_LIMIT_SECONDS * 1000) {
-        await message.reply(RATE_LIMIT_MESSAGE);
-        return;
-    }
-
-    userMessageTimestamps.set(userId, now);
-    const query = message.content.slice(BOT_PREFIX.length).trim();
-
-    if (!query) {
-        await message.reply('Please provide a question or prompt after the `!ai` command.');
-        return;
-    }
-
-    const formattedChatHistory = chatHistory.map(msg => ({
-        role: (msg.author.bot ? 'assistant' : 'user') as 'assistant' | 'user',
-        content: msg.content,
-    }));
-
-    try {
-        if ('sendTyping' in message.channel && typeof message.channel.sendTyping === 'function') {
-            await message.channel.sendTyping();
-        }
-
-        formattedChatHistory.push({ role: 'user', content: query });
-
-        const messages = systemPrompt
-            ? [{ role: 'system' as const, content: systemPrompt }, ...formattedChatHistory]
-            : formattedChatHistory;
-
-        const completion = await openai.chat.completions.create({
-            model: MODEL_ID,
-            messages
-        });
-
-        const responseText = completion.choices[0]?.message?.content || 'No response from AI.';
-        const responseId = completion.id;
-
-        const responseMetadataPromise = handleMetadataRequest(responseId, process.env.OPENROUTER_API_KEY || ''); 
-        const responseMetadata = await responseMetadataPromise;
-
-        const chunks = splitMessage(responseText, 1900);
-        
-        for (const chunk of chunks) {
-            if ('send' in message.channel && typeof message.channel.send === 'function') {
-                await message.channel.send(chunk);
-            }
-        }
-
-        if (responseMetadata) {
-          const formattedMetadata = codeBlock('elm',`Cost: ${responseMetadata.total_cost}$\ntokens: ${responseMetadata.tokens_completion}`);
-          if ('send' in message.channel && typeof message.channel.send === 'function') {
-              await message.channel.send(formattedMetadata);
-          }
-        } else {
-            const fallbackMessage = '\nMetadata unavailable.';
-            if ('send' in message.channel && typeof message.channel.send === 'function') {
-                await message.channel.send(fallbackMessage);
-            }
-        }
-    } catch (error: any) {
-        console.error('OpenAI Error:', error);
-        if (error.response) {
-            console.error('Status:', error.response.status);
-            console.error('Data:', error.response.data);
-            await message.reply(`OpenAI Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
-        } else {
-            await message.reply('An error occurred while processing your request. Please try again later.');
-        }
-    }
-};
-process.on('unhandledRejection', handleError);
-process.on('uncaughtException', handleError);
-
-const DISCORD_TOKEN = process.env.DISCORD_BOT_TOKEN;
-if (!DISCORD_TOKEN) {
-  console.error('Discord bot token is missing. Please set DISCORD_BOT_TOKEN in your environment variables.');
-  process.exit(1);
 }
 
-client.login(DISCORD_TOKEN);
+// Handle AI chat command
+async function handleAIChatCommand(message: Message, openRouterService: OpenRouterService, rateLimiter: RateLimiter): Promise<void> {
+  const userId = message.author.id;
+  
+  // Check rate limiting
+  if (rateLimiter.isRateLimited(userId)) {
+    await message.reply(RATE_LIMIT_MESSAGE);
+    return;
+  }
+  
+  // Update rate limit timestamp
+  rateLimiter.updateTimestamp(userId);
+  
+  // Get the query from arguments
+  const query = message.content.slice(BOT_PREFIX.length).trim();
+  
+  if (!query) {
+    await message.reply('Please provide a question or prompt after the `!ai` command.');
+    return;
+  }
+  
+  try {
+    // Send typing indicator
+    if ('sendTyping' in message.channel && typeof message.channel.sendTyping === 'function') {
+      await message.channel.sendTyping();
+    }
+    
+    // Get chat history
+    const chatHistory = await message.channel.messages.fetch({ limit: 50 });
+    
+    // Send chat completion
+    const { responseText, responseId } = await openRouterService.sendChatCompletion(
+      query,
+      chatHistory
+    );
+    
+    // Split response into chunks if needed
+    const chunks = splitMessage(responseText, 1900);
+    
+    // Send each chunk
+    for (const chunk of chunks) {
+      if ('send' in message.channel && typeof message.channel.send === 'function') {
+        await message.channel.send(chunk);
+      }
+    }
+    
+    // Get response metadata
+    const responseMetadata = await openRouterService.getResponseMetadata(responseId);
+    
+    // Send metadata if available
+    if (responseMetadata) {
+      const formattedMetadata = `\`\`\`\nCost: ${responseMetadata.total_cost}$\nTokens: ${responseMetadata.tokens_completion}\n\`\`\``;
+      
+      if ('send' in message.channel && typeof message.channel.send === 'function') {
+        await message.channel.send(formattedMetadata);
+      }
+    }
+  } catch (error: any) {
+    console.error('OpenAI Error:', error);
+    
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Data:', error.response.data);
+      await message.reply(`OpenAI Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+    } else {
+      await message.reply('An error occurred while processing your request. Please try again later.');
+    }
+  }
+}
+
+// Handle errors
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Promise Rejection:', error);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+// Start the bot
+main().catch(console.error);
