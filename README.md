@@ -11,7 +11,7 @@ a *minimal*, *open source* Discord chat bot with chat context and seamless switc
 |----------------------|----------------------------------------------------|
 | `!ai <message>`      | Command to chat with the AI model                  |
 | `!ai-model <model-id>` | Command to switch between OpenRouter supported models |
-| `!ai-model list`    | Command to list available OpenRouter model-ids    |
+| `!ai-list`    | Command to list available OpenRouter model-ids    |
 | `!ai-prompt <prompt>` | Command to set a custom system prompt  |
 
 - uses chat history (last 50 messages in current channel by default) for context
@@ -79,7 +79,7 @@ inside the discord server where your bot has been added, use the following comma
 ```
 ### list available model ids:
 ```
-!ai-model list
+!ai-list
 ```
 
 
