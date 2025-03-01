@@ -3,9 +3,10 @@
  */
 
 // Command prefixes
-export const BOT_PREFIX = '!ai';
-export const MODEL_PREFIX = '!ai-model';
-export const PROMPT_PREFIX = '!ai-prompt';
+export const BOT_PREFIX = '!ai'; // to send message
+export const MODEL_PREFIX = '!ai-model'; // to change model
+export const PROMPT_PREFIX = '!ai-prompt'; // to set system prompt
+export const AVAILABLE_MODELS_PREFIX = '!ai-list'; // to list available models
 
 // Rate limiting
 export const RATE_LIMIT_SECONDS = 5;
@@ -28,7 +29,7 @@ export const DEFAULT_WELCOME_MESSAGE = `Welcome to the server! I'm an AI-powered
 Here's how to use me:
 - Use \`!ai <message>\` to chat with me
 - Use \`!ai-model <model-id>\` to switch AI models
-- Use \`!ai-model list\` to see available models
+- Use \`!ai-list\` to list available models
 - Use \`!ai-prompt <prompt>\` to set a custom system prompt
 
 Try it out by saying \`!ai Hello!\``;

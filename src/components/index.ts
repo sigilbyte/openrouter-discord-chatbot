@@ -42,7 +42,7 @@ export class ComponentManager {
   private registerComponents(): void {
     // Register components
     this.registerComponent(dropdownComponent);
-    this.registerComponent(buttonComponent);
+    // this.registerComponent(buttonComponent);
   }
 
   /**
