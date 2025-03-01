@@ -13,9 +13,9 @@ export const aiPromptCommand: Command = {
     description: 'Set a custom system prompt for the AI',
     usage: `${PROMPT_PREFIX} <prompt>`,
   },
-  execute: async (client: Client, message: Message, args: string[]): Promise<void> => {
-    // Get OpenRouter service
-    const openRouterService = OpenRouterService.getInstance();
+  execute: async (client: Client, message: Message, args: string[], openRouterService: OpenRouterService): Promise<void> => {
+    // Use the provided OpenRouter service
+    console.log(`[ai-prompt.command] Using provided OpenRouterService instance`);
     
     const newPrompt = args.join(' ');
     

@@ -15,13 +15,13 @@ export const aiCommand: Command = {
     description: 'Chat with the AI assistant',
     usage: `${BOT_PREFIX} <message>`,
   },
-  execute: async (client: Client, message: Message, args: string[]): Promise<void> => {
+  execute: async (client: Client, message: Message, args: string[], openRouterService: OpenRouterService): Promise<void> => {
     console.log('Entered ai command handler for chat completion');
     console.log(`Message content: "${message.content}"`);
     console.log(`Arguments: [${args.join(', ')}]`);
     
-    // Get OpenRouter service
-    const openRouterService = OpenRouterService.getInstance();
+    // Use the provided OpenRouter service
+    console.log(`[ai.command] Using provided OpenRouterService instance`);
     
     // Get rate limiter service
     const rateLimiterService = RateLimiterService.getInstance();

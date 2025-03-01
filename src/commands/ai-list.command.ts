@@ -6,6 +6,7 @@ import { Client, Message } from 'discord.js';
 import type { Command } from '../types/command.types';
 import { AVAILABLE_MODELS_PREFIX } from '../config/constants';
 import { splitMessage } from '../utils/message.utils';
+import { OpenRouterService } from '../services/openrouter.service';
 
 export const aiListCommand: Command = {
   options: {
@@ -13,8 +14,9 @@ export const aiListCommand: Command = {
     description: 'List available AI models',
     usage: `${AVAILABLE_MODELS_PREFIX}`,
   },
-  execute: async (client: Client, message: Message, args: string[]): Promise<void> => {
+  execute: async (client: Client, message: Message, args: string[], openRouterService: OpenRouterService): Promise<void> => {
     console.log('Entered ai-list command handler');
+    console.log(`[ai-list.command] Using provided OpenRouterService instance`);
     
     await message.reply('Fetching available models from OpenRouter API...');
     

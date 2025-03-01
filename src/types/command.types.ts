@@ -1,4 +1,5 @@
 import { Client, Message } from 'discord.js';
+import { OpenRouterService } from '../services/openrouter.service';
 
 export interface CommandOptions {
   name: string;
@@ -9,5 +10,5 @@ export interface CommandOptions {
 
 export interface Command {
   options: CommandOptions;
-  execute: (client: Client, message: Message, args: string[]) => Promise<void>;
+  execute: (client: Client, message: Message, args: string[], openRouterService: OpenRouterService) => Promise<void>;
 }

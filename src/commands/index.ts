@@ -7,6 +7,7 @@ import type { Message } from 'discord.js';
 import type { Command } from '../types/command.types';
 import { BOT_PREFIX, MODEL_PREFIX, PROMPT_PREFIX, AVAILABLE_MODELS_PREFIX } from '../config/constants';
 import { RateLimiterService } from '../services/rate-limiter.service';
+import { OpenRouterService } from '../services/openrouter.service';
 
 // Import commands
 import { aiCommand } from './ai.command';
@@ -21,25 +22,31 @@ export class CommandManager {
   private commands: Map<string, Command>;
   private prefixMap: Map<string, Command>;
   private rateLimiterService: RateLimiterService;
+  private openRouterService: OpenRouterService;
   private static instance: CommandManager;
 
   /**
    * Creates a new command manager
+   * @param openRouterService The OpenRouter service to use
    */
-  private constructor() {
+  private constructor(openRouterService: OpenRouterService) {
+    console.log('[CommandManager] Initializing with OpenRouterService');
     this.commands = new Map<string, Command>();
     this.prefixMap = new Map<string, Command>();
     this.rateLimiterService = RateLimiterService.getInstance();
+    this.openRouterService = openRouterService;
     this.registerCommands();
   }
 
   /**
    * Gets the command manager instance (singleton)
+   * @param openRouterService The OpenRouter service to use
    * @returns The command manager instance
    */
-  public static getInstance(): CommandManager {
+  public static getInstance(openRouterService: OpenRouterService): CommandManager {
     if (!CommandManager.instance) {
-      CommandManager.instance = new CommandManager();
+      CommandManager.instance = new CommandManager(openRouterService);
+      console.log('[CommandManager] Created new instance');
     }
     return CommandManager.instance;
   }
@@ -109,7 +116,7 @@ export class CommandManager {
           
           // Execute the command
           console.log(`Executing command: ${command.options.name}`);
-          await command.execute(client, message, args);
+          await command.execute(client, message, args, this.openRouterService);
           console.log(`Command execution completed: ${command.options.name}`);
           return true;
         }

@@ -13,11 +13,11 @@ export const aiModelCommand: Command = {
     description: 'Change the AI model',
     usage: `${MODEL_PREFIX} <model-id>`,
   },
-  execute: async (client: Client, message: Message, args: string[]): Promise<void> => {
+  execute: async (client: Client, message: Message, args: string[], openRouterService: OpenRouterService): Promise<void> => {
     console.log('Entered ai-model command handler');
     
-    // Get OpenRouter service
-    const openRouterService = OpenRouterService.getInstance();
+    // Use the provided OpenRouter service
+    console.log(`[ai-model.command] Using provided OpenRouterService instance`);
     
     const modelId = args.join(' ');
     console.log(`ai-model command with args joined: "${modelId}"`);

@@ -3,12 +3,23 @@ import { Collection, Message } from 'discord.js';
 import { OPENROUTER_API_KEY, OPENROUTER_REFERER, OPENROUTER_TITLE } from '../config/environment';
 import { DEFAULT_MODEL_ID } from '../config/constants';
 
+interface ChatCompletionParams {
+  temperature?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  max_tokens?: number;
+  logit_bias?: { [key: number]: number };
+  stop?: string | string[];
+  seed?: number; //Integer only.
+}
 
 export class OpenRouterService {
   private openai: OpenAI;
   private static instance: OpenRouterService;
   private modelId: string = DEFAULT_MODEL_ID;
   private systemPrompt: string = '';
+  private defaultParams: ChatCompletionParams = {};
 
   /**
    * Creates a new OpenRouter service
@@ -68,12 +79,33 @@ export class OpenRouterService {
   }
 
   /**
+   * Sets default parameters for chat completion requests
+   * @param params The default parameters to set
+   */
+  public setDefaultParams(params: ChatCompletionParams): void {
+    this.defaultParams = { ...this.defaultParams, ...params }; // Merge new params
+  }
+
+  /**
+   * Gets the current default parameters
+   * @returns The current default parameters
+   */
+  public getDefaultParams(): ChatCompletionParams {
+    return this.defaultParams;
+  }
+  
+  /**
    * Sends a chat completion request to the OpenRouter API
    * @param query The user's query
    * @param chatHistory The chat history
+   * @param overrideParams Optional parameters to override the default ones
    * @returns The AI's response
    */
-  public async sendChatCompletion(query: string, chatHistory: Collection<string, Message>): Promise<{
+  public async sendChatCompletion(
+    query: string,
+    chatHistory: Collection<string, Message>,
+    overrideParams?: ChatCompletionParams
+  ): Promise<{
     responseText: string;
     responseId: string;
   }> {
@@ -90,7 +122,9 @@ export class OpenRouterService {
 
     const completion = await this.openai.chat.completions.create({
       model: this.modelId,
-      messages
+      messages,
+      ...this.defaultParams, // Apply default parameters,
+      ...overrideParams //Override with custom parameters.
     });
 
     const responseText = completion.choices[0]?.message?.content || 'No response from AI.';
@@ -98,7 +132,7 @@ export class OpenRouterService {
 
     return {
       responseText,
-      responseId
+      responseId,
     };
   }
 
@@ -112,7 +146,9 @@ export class OpenRouterService {
     tokens_completion: number;
   } | null> {
     try {
+      // Delay for a second to allow processing, as described in the documentation.
       await new Promise(resolve => setTimeout(resolve, 1000));
+
       const response = await fetch(`https://openrouter.ai/api/v1/generation?id=${responseId}`, {
         method: 'GET',
         headers: {
@@ -126,7 +162,8 @@ export class OpenRouterService {
       }
 
       const data = await response.json();
-      // validate the response structure
+
+      // Validate the response structure
       if (!data || typeof data !== 'object' || !data.data) {
         console.error('Invalid metadata response structure:', data);
         return null;
@@ -141,6 +178,7 @@ export class OpenRouterService {
         total_cost: data.data.total_cost,
         tokens_completion: data.data.tokens_completion
       };
+
     } catch (error) {
       console.error('Error retrieving generation metadata:', error);
       return null;

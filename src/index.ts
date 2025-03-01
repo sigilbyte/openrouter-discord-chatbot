@@ -26,9 +26,22 @@ async function main() {
     
     // Get OpenRouter service
     const openRouterService = OpenRouterService.getInstance();
+    console.log('[INDEX] Initialized OpenRouterService');
     
-    // Get command manager for prefix commands
-    const commandManager = CommandManager.getInstance();
+    // Set the model ID (example of extended usage)
+    openRouterService.setModelId('openai/gpt-4o');
+    console.log('[INDEX] Set default model ID to openai/gpt-4o');
+    
+    // Set default parameters
+    openRouterService.setDefaultParams({
+      temperature: 0.7,
+      max_tokens: 200 // Example value. Adjust as needed.
+    });
+    console.log('[INDEX] Set default parameters for OpenRouterService');
+    
+    // Get command manager for prefix commands and pass the OpenRouterService
+    const commandManager = CommandManager.getInstance(openRouterService);
+    console.log('[INDEX] Initialized CommandManager with OpenRouterService');
     
     // Get component manager for buttons and select menus
     const componentManager = ComponentManager.getInstance();
