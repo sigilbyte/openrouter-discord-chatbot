@@ -34,7 +34,6 @@ export class DiscordService {
       
       console.log('Discord client initialized with intents:', intents);
     } catch (error) {
-      // If we get an error with GuildMembers intent, try without it
       console.warn('Failed to initialize with GuildMembers intent, trying without it...');
       
       this.client = new Client({

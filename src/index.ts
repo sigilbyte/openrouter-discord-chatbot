@@ -35,7 +35,7 @@ async function main() {
     // Set default parameters
     openRouterService.setDefaultParams({
       temperature: 0.7,
-      max_tokens: 200 // Example value. Adjust as needed.
+      //max_tokens: 200 // Example value. Adjust as needed.
     });
     console.log('[INDEX] Set default parameters for OpenRouterService');
     
